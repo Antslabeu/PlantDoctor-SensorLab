@@ -1,0 +1,33 @@
+[project]
+name = "sensorlab"
+version = "0.1.0"
+description = "Scientific framework for capacitive sensor modelling"
+requires-python = ">=3.11"
+
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "sympy",
+    "pandas",
+    "shapely",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

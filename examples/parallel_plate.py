@@ -1,0 +1,3 @@
+from sensorlab.physics.electrostatics import vacuum_permittivity
+
+print(vacuum_permittivity)
