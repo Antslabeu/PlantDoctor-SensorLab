@@ -30,8 +30,11 @@ def electric_potential(
     count = 0
 
     for charge in source:
-        potential += electric_potential(charge, point,).value
-        count += 1
+        try:
+            potential += electric_potential(charge, point).value
+            count += 1
+        except ValueError:
+            continue
 
     if count == 0:
         raise ValueError("Charge collection cannot be empty.")

@@ -25,6 +25,12 @@ class VectorStyle(Enum):
     QUIVER = 1
     STREAMPLOT = 2
 
+class ScalarColormap(Enum):
+    POTENTIAL = 1
+    PERMITTIVITY = 2
+    ENERGY = 3
+    MOISTURE = 4
+
 
 class MatplotlibRenderer:
     """
@@ -55,6 +61,7 @@ class MatplotlibRenderer:
         self.fig.canvas.manager.set_window_title(window_title)
 
         self.minimum_vector_length = minimum_vector_length
+
 
         if equal_axes:
             self.ax.set_aspect("equal")
@@ -105,6 +112,10 @@ class MatplotlibRenderer:
 
         vectors = list(scene.vectors())
         self._render_vectors(vectors)
+
+
+        scalar_field = list(scene.scalar_fields())
+        self._render_scalar_field(scalar_field)
 
         
 
@@ -222,6 +233,20 @@ class MatplotlibRenderer:
             case VectorStyle.STREAMPLOT:
                 self._render_vectors_streamplot(primitives)
 
+    def _render_scalar_field(
+        self,
+        primitives: list[ScalarFieldPrimitive],
+        scalar_colormap: ScalarColormap = ScalarColormap.POTENTIAL,
+    ) -> None:
+        """
+        Render scalar fields stored in the scene.
+        """
+
+        if not primitives:
+            return
+
+        for primitive in primitives:
+            self._render_scalar_field_contour(primitive, scalar_colormap)
 
 
     def _render_vector_quiver(self, p: Point3D, v: Vector3D, primitive: VectorPrimitive) -> None:
@@ -247,7 +272,6 @@ class MatplotlibRenderer:
                 primitive.name,
             )
     
-
     def _render_vectors_streamplot(self, primitives: list[VectorPrimitive], ) -> None:
         """
         Render vector field using matplotlib.streamplot().
@@ -330,4 +354,99 @@ class MatplotlibRenderer:
             color=Colors.VECTOR,
         )
 
+    def _render_scalar_field_contour(
+        self,
+        primitive: ScalarFieldPrimitive,
+        scalar_colormap: ScalarColormap = ScalarColormap.POTENTIAL,
+    ) -> None:
+        """
+        Render scalar field using contour lines.
+        """
+
+        import numpy as np
+
+        # ----------------------------------------------------------
+        # Grid reconstruction
+        # ----------------------------------------------------------
+
+        xs = np.unique(
+            [
+                point.x.value
+                for point, _ in primitive.samples
+            ]
+        )
+
+        ys = np.unique(
+            [
+                point.y.value
+                for point, _ in primitive.samples
+            ]
+        )
+
+        nx = len(xs)
+        ny = len(ys)
+
+        Z = np.zeros((ny, nx))
+
+        x_index = {
+            value: index
+            for index, value in enumerate(xs)
+        }
+
+        y_index = {
+            value: index
+            for index, value in enumerate(ys)
+        }
+
+        # ----------------------------------------------------------
+        # Fill matrix
+        # ----------------------------------------------------------
+
+        for point, value in primitive.samples:
+
+            ix = x_index[point.x.value]
+            iy = y_index[point.y.value]
+
+            Z[iy, ix] = value
+
+        # ----------------------------------------------------------
+        # Mesh
+        # ----------------------------------------------------------
+
+        X, Y = np.meshgrid(xs, ys)
+
+        # ----------------------------------------------------------
+        # Draw contours
+        # ----------------------------------------------------------
+
+        match scalar_colormap:
+            case ScalarColormap.POTENTIAL:
+                cmap = "coolwarm"
+            case ScalarColormap.PERMITTIVITY:
+                cmap = "viridis"
+            case ScalarColormap.ENERGY:
+                cmap = "inferno"
+            case ScalarColormap.MOISTURE:
+                cmap = "Blues"
+
+        contour = self.ax.contourf(
+            X,
+            Y,
+            Z,
+            levels=20,
+            cmap=cmap,
+            linewidths=0.8,
+        )
+
+        # self.fig.colorbar(
+        #     filled,
+        #     ax=self.ax,
+        #     label="Potential [V]",
+        # )
+
+        self.ax.clabel(
+            contour,
+            inline=True,
+            fontsize=8,
+        )
         

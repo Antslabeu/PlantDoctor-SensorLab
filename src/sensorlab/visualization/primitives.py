@@ -66,3 +66,16 @@ class VectorPrimitive(Primitive):
     origin: Point3D
     vector: Vector3D
     name: str | None = None
+
+
+# ============================================================
+# Scalar Field
+# ============================================================
+
+@dataclass(frozen=True)
+class ScalarFieldPrimitive:
+    """
+    A scalar field defined on a grid of points.
+    """
+    samples: list[tuple[Point3D, float]]
+    name: str | None = None

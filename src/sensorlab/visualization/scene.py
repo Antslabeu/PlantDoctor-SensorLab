@@ -11,6 +11,7 @@ from .primitives import (
     ChargePrimitive,
     PointPrimitive,
     VectorPrimitive,
+    ScalarFieldPrimitive,
 )
 
 
@@ -26,6 +27,7 @@ class Scene:
         self._charges: list[ChargePrimitive] = []
         self._points: list[PointPrimitive] = []
         self._vectors: list[VectorPrimitive] = []
+        self._scalar_fields: list[ScalarFieldPrimitive] = []
 
 
     def _add(self, obj: object) -> object:
@@ -42,6 +44,9 @@ class Scene:
 
             case VectorPrimitive():
                 self._vectors.append(obj)
+
+            case ScalarFieldPrimitive():
+                self._scalar_fields.append(obj)
 
             case _:
                 raise TypeError(f"Unsupported object type: {type(obj)}")
@@ -97,6 +102,18 @@ class Scene:
 
         return primitive
 
+    def add_scalar_field(self, samples: list[tuple[Point3D, float]], name: str | None = None, ) -> ScalarFieldPrimitive:
+        """
+        Add a scalar field to the scene.
+        """
+        self._scalar_fields.append(
+            ScalarFieldPrimitive(
+                samples=samples,
+                name=name,
+            )
+        )
+        return self._scalar_fields[-1]
+
     def charges(self) -> Iterator[ChargePrimitive]:
         """
         Iterate over all charges in the scene.
@@ -114,6 +131,12 @@ class Scene:
         Iterate over all vectors in the scene.
         """
         yield from self._vectors
+    
+    def scalar_fields(self) -> Iterator[ScalarFieldPrimitive]:
+        """
+        Iterate over all scalar fields in the scene.
+        """
+        yield from self._scalar_fields
 
     def clear(self) -> None:
         """
