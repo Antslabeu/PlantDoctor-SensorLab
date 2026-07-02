@@ -11,6 +11,8 @@ from sensorlab.physics.quantities.electrical import (
 )
 from sensorlab.physics.quantities.geometry import Coordinate
 
+from sensorlab.physics.materials import Material, Dielectric, VACUUM
+
 
 def point_charge(
     q: float,

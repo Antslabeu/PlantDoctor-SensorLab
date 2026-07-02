@@ -114,6 +114,17 @@ class Scene:
         )
         return self._scalar_fields[-1]
 
+    def add_vector_field(self, samples: list[tuple[Point3D, Vector3D]], ) -> None:
+        """
+        Add an entire vector field to the scene.
+        """
+
+        for origin, vector in samples:
+            self.add_vector(
+                origin=origin,
+                vector=vector,
+            )
+
     def charges(self) -> Iterator[ChargePrimitive]:
         """
         Iterate over all charges in the scene.

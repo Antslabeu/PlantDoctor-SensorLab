@@ -14,6 +14,8 @@ from sensorlab.physics.quantities.geometry import Coordinate
 from sensorlab.visualization.scene import Scene
 from sensorlab.visualization.renderer_matplotlib import MatplotlibRenderer, VectorStyle, VectorMode
 
+from sensorlab.sampling import FieldSampler2D
+
 
 def point(
     x: float,
@@ -60,6 +62,12 @@ def main():
     )
 
     # ==========================================================
+    # Sampler
+    # ==========================================================
+
+    sampler = FieldSampler2D(grid)
+
+    # ==========================================================
     # Scene
     # ==========================================================
 
@@ -72,24 +80,22 @@ def main():
     # Field
     # ==========================================================
 
-    scalar_field_values = []
-    for observation_point in grid:
-        field = electric_field(
-            charges,
-            observation_point,
-        )
+    vector_field = sampler.sample_vector_field(
+        electric_field,
+        source=charges,
+    )
 
-        scene.add_vector(
-            origin=observation_point,
-            vector=field,
-        )
-        scalar_field_values.append(
-            (observation_point, electric_potential(charges, observation_point))
-        )
+    scalar_field = sampler.sample_scalar_field(
+        electric_potential,
+        source=charges,
+    )
 
-        
+    scene.add_vector_field(
+        vector_field,
+    )
+
     scene.add_scalar_field(
-        samples=scalar_field_values,
+        samples=scalar_field,
         name="Electric Potential",
     )
 
