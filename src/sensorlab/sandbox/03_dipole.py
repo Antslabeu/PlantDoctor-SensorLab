@@ -11,7 +11,7 @@ from sensorlab.physics.quantities.electrical import Charge
 from sensorlab.physics.quantities.geometry import Coordinate
 
 from sensorlab.visualization.scene import Scene
-from sensorlab.visualization.renderer_matplotlib import MatplotlibRenderer
+from sensorlab.visualization.renderer_matplotlib import MatplotlibRenderer, VectorStyle, VectorMode
 
 
 def point(
@@ -29,19 +29,24 @@ def point(
 def main():
 
     # ==========================================================
-    # Physical model
+    # Dipole
     # ==========================================================
 
-    charge = PointCharge(
-        charge=Charge(1e-6),
-        position=point(
-            0,
-            0,
+    charges = [
+        PointCharge(
+            charge=Charge(+1e-6),
+            position=point(-0.5, 0),
         ),
-    )
+
+        PointCharge(
+            charge=Charge(-1e-6),
+            position=point(+0.5, 0),
+        ),
+
+    ]
 
     # ==========================================================
-    # Computational grid
+    # Grid
     # ==========================================================
 
     grid = Grid2D(
@@ -49,8 +54,8 @@ def main():
         xmax=2,
         ymin=-2,
         ymax=2,
-        nx=21,
-        ny=21,
+        nx=25,
+        ny=25,
     )
 
     # ==========================================================
@@ -59,31 +64,21 @@ def main():
 
     scene = Scene()
 
-    scene.draw_charge(
-        charge,
-        name="+1 µC",
-    )
+    for charge in charges:
+        scene.add_charge(charge)
 
     # ==========================================================
-    # Calculate field
+    # Field
     # ==========================================================
+
 
     for observation_point in grid:
-
-        if (
-            observation_point.x.value
-            == charge.position.x.value
-            and observation_point.y.value
-            == charge.position.y.value
-        ):
-            continue
-
         field = electric_field(
-            charge,
+            charges,
             observation_point,
         )
 
-        scene.draw_vector(
+        scene.add_vector(
             origin=observation_point,
             vector=field,
         )
@@ -93,8 +88,9 @@ def main():
     # ==========================================================
 
     renderer = MatplotlibRenderer(
-        vector_mode="normalized",
-        vector_scale=0.15,
+        vector_style=VectorStyle.STREAMPLOT,
+        vector_mode=VectorMode.LINEAR,
+        window_title="03 Dipole",
     )
 
     renderer.render(scene)

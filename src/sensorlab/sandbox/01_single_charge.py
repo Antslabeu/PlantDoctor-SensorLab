@@ -22,12 +22,14 @@ def main():
         ),
     )
 
-    scene.draw_charge(
+    scene.add_charge(
         charge,
         name="+1 µC",
     )
 
-    renderer = MatplotlibRenderer()
+    renderer = MatplotlibRenderer(
+        window_title="01 Single Charge",
+    )
     renderer.render(scene)
     renderer.show()
 

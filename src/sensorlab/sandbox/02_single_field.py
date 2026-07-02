@@ -8,7 +8,7 @@ from sensorlab.physics.quantities.electrical import Charge
 from sensorlab.physics.quantities.geometry import Coordinate
 
 from sensorlab.visualization.scene import Scene
-from sensorlab.visualization.renderer_matplotlib import MatplotlibRenderer
+from sensorlab.visualization.renderer_matplotlib import MatplotlibRenderer, VectorStyle, VectorMode
 
 
 def point(
@@ -30,7 +30,7 @@ def main():
     # ==========================================================
 
     charge = PointCharge(
-        charge=Charge(-1e-6),
+        charge=Charge(1e-6),
         position=point(0, 0),
     )
 
@@ -76,7 +76,7 @@ def main():
 
     scene = Scene()
 
-    scene.draw_charge(
+    scene.add_charge(
         charge,
         name="+1 µC",
     )
@@ -92,9 +92,9 @@ def main():
             p,
         )
 
-        scene.draw_point(p)
+        scene.add_point(p)
 
-        scene.draw_vector(
+        scene.add_vector(
             origin=p,
             vector=field,
         )
@@ -103,10 +103,12 @@ def main():
     # Render
     # ==========================================================
 
-    renderer = MatplotlibRenderer()
+    renderer = MatplotlibRenderer(
+        vector_style=VectorStyle.STREAMPLOT,
+        window_title="02 Single Field",
+    )
 
     renderer.render(scene)
-
     renderer.show()
 
 

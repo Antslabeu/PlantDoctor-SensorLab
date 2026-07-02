@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from enum import Enum
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -14,6 +16,16 @@ from sensorlab.visualization.primitives import (
 from sensorlab.visualization.scene import Scene
 
 
+
+class VectorMode(Enum):
+    NORMALIZED = 1
+    LINEAR = 2
+
+class VectorStyle(Enum):
+    QUIVER = 1
+    STREAMPLOT = 2
+
+
 class MatplotlibRenderer:
     """
     Renderer using Matplotlib.
@@ -26,7 +38,10 @@ class MatplotlibRenderer:
         self,
         *,
         vector_scale: float = 1,
-        vector_mode: str = "normalized",
+        window_title: str = "SensorLab",
+        vector_mode: VectorMode = VectorMode.NORMALIZED,
+        minimum_vector_length = 1e-1,
+        vector_style: VectorStyle = VectorStyle.QUIVER,
         figsize: tuple[int, int] = (8, 8),
         equal_axes: bool = True,
         grid: bool = True,
@@ -36,6 +51,10 @@ class MatplotlibRenderer:
 
         self.vector_scale = vector_scale
         self.vector_mode = vector_mode
+        self.vector_style = vector_style
+        self.fig.canvas.manager.set_window_title(window_title)
+
+        self.minimum_vector_length = minimum_vector_length
 
         if equal_axes:
             self.ax.set_aspect("equal")
@@ -51,13 +70,13 @@ class MatplotlibRenderer:
         Scale a vector for visualization.
         """
 
-        if self.vector_mode == "linear":
+        if self.vector_mode == VectorMode.LINEAR:
             return vector * self.vector_scale
 
-        if self.vector_mode == "normalized":
+        if self.vector_mode == VectorMode.NORMALIZED:
             length = vector.magnitude().value
-            if length == 0:
-                return vector
+            if length < self.minimum_vector_length:
+                return Vector3D(0, 0, 0)
 
             return vector.normalize() * self.vector_scale
 
@@ -77,21 +96,17 @@ class MatplotlibRenderer:
         Render every object contained in the scene.
         """
 
-        for primitive in scene:
+        for charge in scene.charges():
+            self._render_charge(charge)
 
-            if isinstance(primitive, ChargePrimitive):
-                self._render_charge(primitive)
+        for point in scene.points():
+            self._render_point(point)
 
-            elif isinstance(primitive, PointPrimitive):
-                self._render_point(primitive)
 
-            elif isinstance(primitive, VectorPrimitive):
-                self._render_vector(primitive)
+        vectors = list(scene.vectors())
+        self._render_vectors(vectors)
 
-            else:
-                raise TypeError(
-                    f"Unsupported primitive: {type(primitive).__name__}"
-                )
+        
 
     def clear(self) -> None:
         """
@@ -192,13 +207,27 @@ class MatplotlibRenderer:
                 ha="center",
             )
 
-    def _render_vector(
+    def _render_vectors(
         self,
-        primitive: VectorPrimitive,
+        primitives: list[VectorPrimitive],
     ) -> None:
 
-        p = primitive.origin
-        v = self._scale_vector(primitive.vector)
+        match self.vector_style:
+            case VectorStyle.QUIVER:
+                for primitive in primitives:
+                    p = primitive.origin
+                    v = self._scale_vector(primitive.vector)
+                    self._render_vector_quiver(p, v, primitive)
+
+            case VectorStyle.STREAMPLOT:
+                self._render_vectors_streamplot(primitives)
+
+
+
+    def _render_vector_quiver(self, p: Point3D, v: Vector3D, primitive: VectorPrimitive) -> None:
+        """
+        Render a vector using quiver.
+        """
 
         self.ax.quiver(
             p.x.value,
@@ -217,3 +246,88 @@ class MatplotlibRenderer:
                 p.y.value + v.y,
                 primitive.name,
             )
+    
+
+    def _render_vectors_streamplot(self, primitives: list[VectorPrimitive], ) -> None:
+        """
+        Render vector field using matplotlib.streamplot().
+        """
+
+        print(len(primitives))
+
+        import numpy as np
+
+        # ----------------------------------------------------------
+        # Collect unique coordinates
+        # ----------------------------------------------------------
+
+        xs = np.unique([
+            primitive.origin.x.value
+            for primitive in primitives
+        ])
+
+        ys = np.unique([
+            primitive.origin.y.value
+            for primitive in primitives
+        ])
+
+        nx = len(xs)
+        ny = len(ys)
+
+        U = np.zeros((ny, nx))
+        V = np.zeros((ny, nx))
+
+        x_index = {
+            value: index
+            for index, value in enumerate(xs)
+        }
+
+        y_index = {
+            value: index
+            for index, value in enumerate(ys)
+        }
+
+        # ----------------------------------------------------------
+        # Fill vector field
+        # ----------------------------------------------------------
+
+        for primitive in primitives:
+
+            p = primitive.origin
+            v = self._scale_vector(
+                primitive.vector
+            )
+
+            ix = x_index[p.x.value]
+            iy = y_index[p.y.value]
+
+            U[iy, ix] = v.x
+            V[iy, ix] = v.y
+
+        # ----------------------------------------------------------
+        # Mesh
+        # ----------------------------------------------------------
+
+        X, Y = np.meshgrid(xs, ys)
+
+        # ----------------------------------------------------------
+        # Streamplot
+        # ----------------------------------------------------------
+
+        magnitude = np.sqrt(U**2 + V**2)
+        linewidth = np.sqrt(magnitude)
+        linewidth /= linewidth.max()
+        linewidth = 0.5 + 2.5 * linewidth
+
+        self.ax.streamplot(
+            X,
+            Y,
+            U,
+            V,
+            density=2.4,
+            linewidth=linewidth,
+            arrowsize=1.2,
+            color=Colors.VECTOR,
+        )
+
+        

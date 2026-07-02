@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 
 from sensorlab.physics.quantities.geometry import Length
 from sensorlab.physics.quantities.geometry import Coordinate
@@ -13,6 +14,19 @@ class Point3D:
     x: Coordinate
     y: Coordinate
     z: Coordinate
+
+    def is_same_position(self, other: Vector3D) -> bool:
+        """
+        Check if two vectors represent the same position in space.
+        """
+
+        return (
+            math.isclose(self.x, other.x)
+            and
+            math.isclose(self.y, other.y)
+            and
+            math.isclose(self.z, other.z)
+        )
 
     def vector_to(self, other: "Point3D") -> "Vector3D":
         """

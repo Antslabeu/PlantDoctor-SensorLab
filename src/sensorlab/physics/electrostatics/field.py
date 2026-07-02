@@ -21,11 +21,14 @@ def electric_field(
     count = 0
 
     for charge in source:
-        field += electric_field(
-            charge,
-            point,
-        )
-        count += 1
+        try:
+            field += electric_field(
+                charge,
+                point,
+            )
+            count += 1
+        except ValueError:
+            continue
 
     if count == 0:
         raise ValueError("Charge collection cannot be empty.")

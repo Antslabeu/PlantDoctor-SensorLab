@@ -23,14 +23,29 @@ class Scene:
     """
 
     def __init__(self):
-        self._objects: list[object] = []
+        self._charges: list[ChargePrimitive] = []
+        self._points: list[PointPrimitive] = []
+        self._vectors: list[VectorPrimitive] = []
 
 
     def _add(self, obj: object) -> object:
         """
         Low-level method for adding an object to the scene.
         """
-        self._objects.append(obj)
+
+        match obj:
+            case ChargePrimitive():
+                self._charges.append(obj)
+
+            case PointPrimitive():
+                self._points.append(obj)
+
+            case VectorPrimitive():
+                self._vectors.append(obj)
+
+            case _:
+                raise TypeError(f"Unsupported object type: {type(obj)}")
+
         return obj
 
     # ==========================================================
@@ -39,7 +54,7 @@ class Scene:
 
 
 
-    def draw_charge(self, charge: PointCharge, *, name: str | None = None, ) -> ChargePrimitive:
+    def add_charge(self, charge: PointCharge, *, name: str | None = None, ) -> ChargePrimitive:
         """
         Add a point charge to the scene.
         """
@@ -53,7 +68,7 @@ class Scene:
 
         return primitive
 
-    def draw_point(self, point: Point3D, *, name: str | None = None, ) -> PointPrimitive:
+    def add_point(self, point: Point3D, *, name: str | None = None, ) -> PointPrimitive:
         """
         Add a point to the scene.
         """
@@ -67,7 +82,7 @@ class Scene:
 
         return primitive
 
-    def draw_vector(self, origin: Point3D, vector: Vector3D, *, name: str | None = None, ) -> VectorPrimitive:
+    def add_vector(self, origin: Point3D, vector: Vector3D, *, name: str | None = None, ) -> VectorPrimitive:
         """
         Add a vector to the scene.
         """
@@ -82,31 +97,44 @@ class Scene:
 
         return primitive
 
+    def charges(self) -> Iterator[ChargePrimitive]:
+        """
+        Iterate over all charges in the scene.
+        """
+        yield from self._charges
+    
+    def points(self) -> Iterator[PointPrimitive]:
+        """
+        Iterate over all points in the scene.
+        """
+        yield from self._points
+    
+    def vectors(self) -> Iterator[VectorPrimitive]:
+        """
+        Iterate over all vectors in the scene.
+        """
+        yield from self._vectors
+
     def clear(self) -> None:
         """
         Remove every object from the scene.
         """
 
-        self._objects.clear()
+        self._charges.clear()
+        self._points.clear()
+        self._vectors.clear()
 
     def remove(self, obj: object, ) -> None:
         """
         Remove an object from the scene.
         """
+        if _charge.contains(obj):
+            self._charges.remove(obj)
+            return
+        if _point.contains(obj):
+            self._points.remove(obj)
+            return
+        if _vector.contains(obj):
+            self._vectors.remove(obj)
+            return
 
-        self._objects.remove(obj)
-
-    def __iter__(self) -> Iterator[object]:
-        return iter(self._objects)
-
-    def __len__(self) -> int:
-        return len(self._objects)
-
-    def __getitem__(self, index: int, ) -> object:
-        return self._objects[index]
-
-    def copy(self) -> Scene:
-        scene = Scene()
-        scene.extend(self._objects)
-
-        return scene
