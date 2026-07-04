@@ -46,20 +46,76 @@ class Grid2D:
     @property
     def dx(self) -> float:
         """Grid spacing along X."""
-
         return (self.xmax - self.xmin) / (self.nx - 1)
 
     @property
     def dy(self) -> float:
         """Grid spacing along Y."""
-
         return (self.ymax - self.ymin) / (self.ny - 1)
 
     @property
     def shape(self) -> tuple[int, int]:
         """Grid shape."""
+        return self.ny, self.nx
 
-        return self.nx, self.ny
+    @property
+    def x(self) -> tuple[float, ...]:
+        """Grid X coordinates."""
+        return tuple(
+            self.xmin + i * self.dx
+            for i in range(self.nx)
+        )
+        
+    @property
+    def y(self) -> tuple[float, ...]:
+        """Grid Y coordinates."""
+        return tuple(
+            self.ymin + j * self.dy
+            for j in range(self.ny)
+        )
+
+    @property
+    def width(self):
+        return self.xmax - self.xmin
+    
+    @property
+    def extent(self):
+        return (
+            self.xmin,
+            self.xmax,
+            self.ymin,
+            self.ymax,
+        )
+
+    @property
+    def center(self):
+        """
+        Return the center of the grid.
+        """
+
+        return Point3D(
+            Coordinate((self.xmin + self.xmax) / 2),
+            Coordinate((self.ymin + self.ymax) / 2),
+            Coordinate(0),
+        )
+
+    @property
+    def corners(self):
+        """
+        Return the corners of the grid.
+        """
+
+        return [
+            Point3D(
+                Coordinate(x),
+                Coordinate(y),
+                Coordinate(0),
+            )
+            for x in (self.xmin, self.xmax)
+            for y in (self.ymin, self.ymax)
+        ]
+
+
 
     # ==========================================================
     # Point access
@@ -98,8 +154,36 @@ class Grid2D:
         """
 
         ix, iy = index
-        return self.point(ix, iy)
+        return self.at(ix, iy)
 
+    def indices(self):
+        """
+        Iterate over all grid nodes together with their indices.
+        """
+
+        for iy, y in enumerate(self.y):
+            for ix, x in enumerate(self.x):
+                yield (
+                    iy,
+                    ix,
+                    Point3D(
+                        Coordinate(x),
+                        Coordinate(y),
+                        Coordinate(0),
+                    ),
+                )
+
+    def points(self):
+        """
+        Iterate over all grid points.
+        """
+        yield from self
+    
+    
+
+
+    
+    
     # ==========================================================
     # Iteration
     # ==========================================================

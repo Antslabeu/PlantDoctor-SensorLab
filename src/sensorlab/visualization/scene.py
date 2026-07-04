@@ -12,6 +12,7 @@ from .primitives import (
     PointPrimitive,
     VectorPrimitive,
     ScalarFieldPrimitive,
+    ElectrodePrimitive
 )
 
 
@@ -28,6 +29,7 @@ class Scene:
         self._points: list[PointPrimitive] = []
         self._vectors: list[VectorPrimitive] = []
         self._scalar_fields: list[ScalarFieldPrimitive] = []
+        self._electrodes: list[ElectrodePrimitive] = []
 
 
     def _add(self, obj: object) -> object:
@@ -47,6 +49,9 @@ class Scene:
 
             case ScalarFieldPrimitive():
                 self._scalar_fields.append(obj)
+            
+            case ElectrodePrimitive():
+                self._electrodes.append(obj)
 
             case _:
                 raise TypeError(f"Unsupported object type: {type(obj)}")
@@ -102,15 +107,12 @@ class Scene:
 
         return primitive
 
-    def add_scalar_field(self, samples: list[tuple[Point3D, float]], name: str | None = None, ) -> ScalarFieldPrimitive:
+    def add_scalar_field(self, field: PotentialField, ) -> ScalarFieldPrimitive:
         """
         Add a scalar field to the scene.
         """
         self._scalar_fields.append(
-            ScalarFieldPrimitive(
-                samples=samples,
-                name=name,
-            )
+            ScalarFieldPrimitive(field=field, )
         )
         return self._scalar_fields[-1]
 
@@ -124,13 +126,29 @@ class Scene:
                 origin=origin,
                 vector=vector,
             )
+    
+    def add_electrode(self, electrode: RectangleElectrode, name: str | None = None) -> None:
+        """
+        Add an electrode to the scene.
+        """
+        for rectangle in electrode.rectangles:
+            self._electrodes.append(
+                ElectrodePrimitive(
+                    center=rectangle.center,
+                    width=rectangle.width,
+                    height=rectangle.height,
+                    potential=electrode.potential,
+                    name=name,
+                )
+            )
+        
 
     def charges(self) -> Iterator[ChargePrimitive]:
         """
         Iterate over all charges in the scene.
         """
         yield from self._charges
-    
+
     def points(self) -> Iterator[PointPrimitive]:
         """
         Iterate over all points in the scene.
@@ -148,6 +166,12 @@ class Scene:
         Iterate over all scalar fields in the scene.
         """
         yield from self._scalar_fields
+
+    def electrodes(self) -> Iterator[ElectrodePrimitive]:
+        """
+        Iterate over all electrodes in the scene.
+        """
+        yield from self._electrodes
 
     def clear(self) -> None:
         """

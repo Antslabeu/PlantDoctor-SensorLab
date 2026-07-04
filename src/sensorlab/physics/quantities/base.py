@@ -1,6 +1,7 @@
 from dataclasses import dataclass
+from functools import total_ordering
 
-
+@total_ordering
 @dataclass(frozen=True)
 class Quantity:
     """
@@ -27,3 +28,27 @@ class Quantity:
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.value} {self.unit})"
+
+    def __lt__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.value < other.value
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.value == other.value
+
+    def __sub__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.__class__(self.value - other.value)
+
+    def __add__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.__class__(self.value + other.value)
+
+    
+
+    

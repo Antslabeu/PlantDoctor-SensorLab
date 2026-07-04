@@ -6,6 +6,9 @@ from sensorlab.physics.electrostatics import PointCharge
 from sensorlab.physics.geometry import Point3D
 from sensorlab.physics.geometry import Vector3D
 
+from sensorlab.physics.quantities.electrical import Voltage
+from sensorlab.physics.quantities.geometry import Length
+
 
 # ============================================================
 # Base class
@@ -74,8 +77,21 @@ class VectorPrimitive(Primitive):
 
 @dataclass(frozen=True)
 class ScalarFieldPrimitive:
+    field: PotentialField
+
+
+# ============================================================
+# Electrode (Rectangle)
+# ============================================================
+
+@dataclass(frozen=True)
+class ElectrodePrimitive(Primitive):
     """
-    A scalar field defined on a grid of points.
+    A rectangular electrode.
     """
-    samples: list[tuple[Point3D, float]]
+
+    center: Point3D
+    width: Length
+    height: Length
+    potential: Voltage
     name: str | None = None

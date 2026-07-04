@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 
 from sensorlab.visualization.colors import Colors
 from sensorlab.visualization.primitives import (
@@ -15,21 +16,11 @@ from sensorlab.visualization.primitives import (
 )
 from sensorlab.visualization.scene import Scene
 
+from sensorlab.visualization.settings import VectorMode, VectorStyle, ScalarColormap
+
+import numpy as np
 
 
-class VectorMode(Enum):
-    NORMALIZED = 1
-    LINEAR = 2
-
-class VectorStyle(Enum):
-    QUIVER = 1
-    STREAMPLOT = 2
-
-class ScalarColormap(Enum):
-    POTENTIAL = 1
-    PERMITTIVITY = 2
-    ENERGY = 3
-    MOISTURE = 4
 
 
 class MatplotlibRenderer:
@@ -116,6 +107,9 @@ class MatplotlibRenderer:
 
         scalar_field = list(scene.scalar_fields())
         self._render_scalar_field(scalar_field)
+
+        for electrode in scene.electrodes():
+            self._render_electrode(electrode)
 
         
 
@@ -277,9 +271,10 @@ class MatplotlibRenderer:
         Render vector field using matplotlib.streamplot().
         """
 
-        print(len(primitives))
+        print(f"Generated {len(primitives)} vector primitives")
 
-        import numpy as np
+        if not primitives:
+            return
 
         # ----------------------------------------------------------
         # Collect unique coordinates
@@ -354,99 +349,75 @@ class MatplotlibRenderer:
             color=Colors.VECTOR,
         )
 
-    def _render_scalar_field_contour(
-        self,
-        primitive: ScalarFieldPrimitive,
-        scalar_colormap: ScalarColormap = ScalarColormap.POTENTIAL,
-    ) -> None:
-        """
-        Render scalar field using contour lines.
-        """
+    def _render_scalar_field_contour(self, primitive: ScalarFieldPrimitive, scalar_colormap: ScalarColormap, ) -> None:
 
-        import numpy as np
+        field = primitive.field
+        grid = field.grid
 
-        # ----------------------------------------------------------
-        # Grid reconstruction
-        # ----------------------------------------------------------
-
-        xs = np.unique(
-            [
-                point.x.value
-                for point, _ in primitive.samples
-            ]
+        X, Y = np.meshgrid(
+            grid.x,
+            grid.y,
         )
 
-        ys = np.unique(
-            [
-                point.y.value
-                for point, _ in primitive.samples
-            ]
+        Z = field.values
+
+        self.ax.contourf(
+            X,
+            Y,
+            Z,
+            levels=40,
+            cmap=Colors.scalar_colormap(scalar_colormap,),
         )
 
-        nx = len(xs)
-        ny = len(ys)
-
-        Z = np.zeros((ny, nx))
-
-        x_index = {
-            value: index
-            for index, value in enumerate(xs)
-        }
-
-        y_index = {
-            value: index
-            for index, value in enumerate(ys)
-        }
-
-        # ----------------------------------------------------------
-        # Fill matrix
-        # ----------------------------------------------------------
-
-        for point, value in primitive.samples:
-
-            ix = x_index[point.x.value]
-            iy = y_index[point.y.value]
-
-            Z[iy, ix] = value
-
-        # ----------------------------------------------------------
-        # Mesh
-        # ----------------------------------------------------------
-
-        X, Y = np.meshgrid(xs, ys)
-
-        # ----------------------------------------------------------
-        # Draw contours
-        # ----------------------------------------------------------
-
-        match scalar_colormap:
-            case ScalarColormap.POTENTIAL:
-                cmap = "coolwarm"
-            case ScalarColormap.PERMITTIVITY:
-                cmap = "viridis"
-            case ScalarColormap.ENERGY:
-                cmap = "inferno"
-            case ScalarColormap.MOISTURE:
-                cmap = "Blues"
-
-        contour = self.ax.contourf(
+        self.ax.contour(
             X,
             Y,
             Z,
             levels=20,
-            cmap=cmap,
-            linewidths=0.8,
-        )
-
-        # self.fig.colorbar(
-        #     filled,
-        #     ax=self.ax,
-        #     label="Potential [V]",
-        # )
-
-        self.ax.clabel(
-            contour,
-            inline=True,
-            fontsize=8,
+            colors="black",
+            linewidths=0.4,
         )
         
+    def _render_electrode(self, primitive: ElectrodePrimitive, ) -> None:
+        """
+        Render a single rectangular electrode.
+        """
+
+        x = (
+            primitive.center.x.value
+            - primitive.width.value / 2
+        )
+
+        y = (
+            primitive.center.y.value
+            - primitive.height.value / 2
+        )
+
+        rectangle = Rectangle(
+            (x, y),
+            primitive.width.value,
+            primitive.height.value,
+            facecolor="gold",
+            edgecolor="black",
+            linewidth=1.5,
+            zorder=10,
+        )
+
+        self.ax.add_patch(rectangle)
+
+        label = f"{primitive.potential.value:.2f} V"
+
+        if primitive.name:
+            label = f"{primitive.name}\n{label}"
+
+        self.ax.text(
+            primitive.center.x.value,
+            primitive.center.y.value,
+            label,
+            ha="center",
+            va="center",
+            fontsize=8,
+            weight="bold",
+            color="black",
+            zorder=11,
+        )

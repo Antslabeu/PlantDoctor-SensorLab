@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any, Callable
 
 from sensorlab.physics.geometry import Grid2D, Point3D
+from sensorlab.physics.fields import PotentialField
+import numpy as np
 
 
 class FieldSampler2D:
@@ -31,15 +33,20 @@ class FieldSampler2D:
         *,
         exclude: Callable[[Point3D], bool] | None = None,
         **kwargs,
-    ) -> list[tuple[Point3D, float]]:
+    ) -> PotentialField:
         """
         Sample a scalar-valued function on the grid.
         """
 
-        samples: list[tuple[Point3D, float]] = []
+        values = np.zeros(
+            (
+                self.grid.ny,
+                self.grid.nx,
+            ),
+            dtype=float,
+        )
 
-        for point in self.grid:
-
+        for iy, ix, point in self.grid.indices():
             if exclude is not None and exclude(point):
                 continue
 
@@ -51,14 +58,12 @@ class FieldSampler2D:
             if hasattr(value, "value"):
                 value = value.value
 
-            samples.append(
-                (
-                    point,
-                    float(value),
-                )
-            )
+            values[iy, ix] = float(value)
 
-        return samples
+        return PotentialField(
+            grid=self.grid,
+            values=values,
+        )
 
     # ==========================================================
     # Vector field
@@ -70,15 +75,27 @@ class FieldSampler2D:
         *,
         exclude: Callable[[Point3D], bool] | None = None,
         **kwargs,
-    ) -> list[tuple[Point3D, Any]]:
+    ) -> PotentialField:
         """
         Sample a vector-valued function on the grid.
         """
 
-        samples = []
+        ex = np.zeros(
+            (
+                self.grid.ny,
+                self.grid.nx,
+            ),
+            dtype=float,
+        )
+        ey = np.zeros(
+            (
+                self.grid.ny,
+                self.grid.nx,
+            ),
+            dtype=float,
+        )
 
         for point in self.grid:
-
             if exclude is not None and exclude(point):
                 continue
 
@@ -94,4 +111,8 @@ class FieldSampler2D:
                 )
             )
 
-        return samples
+        return ElectricField(
+            grid=self.grid,
+            ex=ex,
+            ey=ey,
+        )

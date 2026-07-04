@@ -80,31 +80,19 @@ def main():
     # Field
     # ==========================================================
 
-    vector_field = sampler.sample_vector_field(
-        electric_field,
-        source=charges,
-    )
-
-    scalar_field = sampler.sample_scalar_field(
+    potential = sampler.sample_scalar_field(
         electric_potential,
         source=charges,
     )
 
-    scene.add_vector_field(
-        vector_field,
-    )
-
-    scene.add_scalar_field(
-        samples=scalar_field,
-        name="Electric Potential",
-    )
+    scene.add_scalar_field(potential)
 
     # ==========================================================
     # Render
     # ==========================================================
 
     renderer = MatplotlibRenderer(
-        vector_style=VectorStyle.STREAMPLOT,
+        vector_style=None,
         vector_mode=VectorMode.LINEAR,
         window_title="04 Electric Potential",
     )
