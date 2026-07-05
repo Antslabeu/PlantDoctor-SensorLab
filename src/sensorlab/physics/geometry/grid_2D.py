@@ -77,6 +77,10 @@ class Grid2D:
     @property
     def width(self):
         return self.xmax - self.xmin
+
+    @property
+    def height(self) -> float:
+        return self.ymax - self.ymin
     
     @property
     def extent(self):

@@ -12,6 +12,7 @@ from .primitives import (
     PointPrimitive,
     VectorPrimitive,
     ScalarFieldPrimitive,
+    VectorFieldPrimitive,
     ElectrodePrimitive
 )
 
@@ -28,6 +29,7 @@ class Scene:
         self._charges: list[ChargePrimitive] = []
         self._points: list[PointPrimitive] = []
         self._vectors: list[VectorPrimitive] = []
+        self._vector_fields: list[VectorFieldPrimitive] = []
         self._scalar_fields: list[ScalarFieldPrimitive] = []
         self._electrodes: list[ElectrodePrimitive] = []
 
@@ -49,6 +51,9 @@ class Scene:
 
             case ScalarFieldPrimitive():
                 self._scalar_fields.append(obj)
+            
+            case VectorFieldPrimitive():
+                self._vector_fields.append(obj)
             
             case ElectrodePrimitive():
                 self._electrodes.append(obj)
@@ -116,16 +121,16 @@ class Scene:
         )
         return self._scalar_fields[-1]
 
-    def add_vector_field(self, samples: list[tuple[Point3D, Vector3D]], ) -> None:
+    def add_vector_field(self, field: ElectricFieldGrid, ) -> VectorFieldPrimitive:
         """
-        Add an entire vector field to the scene.
+        Add a vector field to the scene.
         """
 
-        for origin, vector in samples:
-            self.add_vector(
-                origin=origin,
-                vector=vector,
-            )
+        self._vector_fields.append(
+            VectorFieldPrimitive(field=field, )
+        )
+
+        return self._vector_fields[-1]
     
     def add_electrode(self, electrode: RectangleElectrode, name: str | None = None) -> None:
         """
@@ -166,6 +171,9 @@ class Scene:
         Iterate over all scalar fields in the scene.
         """
         yield from self._scalar_fields
+
+    def vector_fields(self, ) -> Iterator[VectorFieldPrimitive]:
+        yield from self._vector_fields
 
     def electrodes(self) -> Iterator[ElectrodePrimitive]:
         """

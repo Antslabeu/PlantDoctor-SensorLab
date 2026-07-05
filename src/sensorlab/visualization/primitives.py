@@ -81,6 +81,14 @@ class ScalarFieldPrimitive:
 
 
 # ============================================================
+# Vector Field
+# ============================================================
+
+@dataclass(frozen=True)
+class VectorFieldPrimitive:
+    field: ElectricFieldGrid
+
+# ============================================================
 # Electrode (Rectangle)
 # ============================================================
 

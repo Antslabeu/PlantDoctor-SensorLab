@@ -108,6 +108,9 @@ class MatplotlibRenderer:
         scalar_field = list(scene.scalar_fields())
         self._render_scalar_field(scalar_field)
 
+        vector_field = list(scene.vector_fields())
+        self._render_vector_field(vector_field)
+
         for electrode in scene.electrodes():
             self._render_electrode(electrode)
 
@@ -241,6 +244,21 @@ class MatplotlibRenderer:
 
         for primitive in primitives:
             self._render_scalar_field_contour(primitive, scalar_colormap)
+
+    def _render_vector_field(
+        self, 
+        primitives: list[VectorFieldPrimitive], 
+        colormap: ScalarColormap = ScalarColormap.POTENTIAL,
+    ) -> None:
+        """
+        Render vector fields stored in the scene.
+        """
+
+        if not primitives:
+            return
+
+        for primitive in primitives:
+            self._render_vector_field_contour(primitive, colormap)
 
 
     def _render_vector_quiver(self, p: Point3D, v: Vector3D, primitive: VectorPrimitive) -> None:
@@ -376,6 +394,42 @@ class MatplotlibRenderer:
             levels=20,
             colors="black",
             linewidths=0.4,
+        )
+
+    def _render_vector_field_contour(self, primitive: VectorFieldPrimitive, scalar_colormap: ScalarColormap, ) -> None:
+        """
+        Render a vector field using matplotlib.streamplot().
+        """
+
+        field = primitive.field
+        grid = field.grid
+
+        X, Y = np.meshgrid(
+            grid.x,
+            grid.y,
+        )
+
+        U = field.x
+        V = field.y
+
+        magnitude = np.sqrt(U**2 + V**2)
+
+        linewidth = np.sqrt(magnitude)
+
+        if linewidth.max() > 0:
+            linewidth /= linewidth.max()
+
+        linewidth = 0.5 + 2.5 * linewidth
+
+        self.ax.streamplot(
+            X,
+            Y,
+            U,
+            V,
+            density=2.4,
+            linewidth=linewidth,
+            color=Colors.VECTOR,
+            arrowsize=1.2,
         )
         
     def _render_electrode(self, primitive: ElectrodePrimitive, ) -> None:
