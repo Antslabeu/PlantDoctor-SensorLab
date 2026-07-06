@@ -4,6 +4,7 @@ from .field import ElectricFieldVector
 from .force import ForceVector
 from .grid_2D import Grid2D
 from .rectangle import Rectangle
+from .surface_sample import SurfaceSample
 
 __all__ = [
     "Point3D",
@@ -12,4 +13,5 @@ __all__ = [
     "ForceVector",
     "Grid2D",
     "Rectangle",
+    "SurfaceSample"
 ]
