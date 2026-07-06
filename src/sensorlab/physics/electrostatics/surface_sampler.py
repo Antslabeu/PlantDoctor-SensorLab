@@ -4,7 +4,7 @@ import math
 
 
 from sensorlab.physics.electrodes import RectangleElectrode
-from sensorlab.physics.geometry import Point3D, Vector2D, SurfaceSample
+from sensorlab.physics.geometry import Point3D, Vector3D, SurfaceSample
 from sensorlab.physics.quantities.geometry import Coordinate
 
 
@@ -41,6 +41,11 @@ class SurfaceSampler:
             ymin = cy - height / 2
             ymax = cy + height / 2
 
+            print("Height: ")
+            print(height)
+            print("spacing: ")
+            print(spacing)
+
 
             count_lr = math.floor(height / spacing)
             count_tb = math.floor(width / spacing)
@@ -59,7 +64,7 @@ class SurfaceSampler:
                             Coordinate(y),
                             Coordinate(0),
                         ),
-                        normal=Vector2D(-1.0, 0.0),
+                        normal=Vector3D(-1.0, 0.0, 0.0),
                         length=spacing,
                     )
                 )
@@ -78,7 +83,7 @@ class SurfaceSampler:
                             Coordinate(y),
                             Coordinate(0),
                         ),
-                        normal=Vector2D(1.0, 0.0),
+                        normal=Vector3D(-1.0, 0.0, 0.0),
                         length=spacing,
                     )
                 )
@@ -97,7 +102,7 @@ class SurfaceSampler:
                             Coordinate(ymin - spacing / 2),
                             Coordinate(0),
                         ),
-                        normal=Vector2D(0.0, -1.0),
+                        normal=Vector3D(-1.0, 0.0, 0.0),
                         length=spacing,
                     )
                 )
@@ -116,7 +121,7 @@ class SurfaceSampler:
                             Coordinate(ymax + spacing / 2),
                             Coordinate(0),
                         ),
-                        normal=Vector2D(0.0, 1.0),
+                        normal=Vector3D(-1.0, 0.0, 0.0),
                         length=spacing,
                     )
                 )

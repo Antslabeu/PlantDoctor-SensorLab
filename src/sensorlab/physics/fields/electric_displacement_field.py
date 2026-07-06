@@ -7,6 +7,7 @@ import numpy as np
 from sensorlab.physics.fields.electric_field_grid import ElectricFieldGrid
 from sensorlab.physics.geometry import Grid2D
 from sensorlab.constants import VACUUM_PERMITTIVITY
+from .interpolate_sampler import interpolate_sample
 
 
 @dataclass(frozen=True)
@@ -25,7 +26,7 @@ class ElectricDisplacementField:
         cls,
         field: ElectricFieldGrid,
         relative_permittivity: float = 1.0,
-    ) -> "ElectricDisplacementField":
+    ) -> ElectricDisplacementField:
 
         epsilon = VACUUM_PERMITTIVITY * relative_permittivity
 
@@ -45,3 +46,6 @@ class ElectricDisplacementField:
     @property
     def shape(self) -> tuple[int, int]:
         return self.x.shape
+
+    def sample(self, point: Point3D, ) -> Vector2D:
+        return interpolate_sample(self, point, )
